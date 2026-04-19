@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 import pickle
 import re
 import string
@@ -44,7 +44,7 @@ vectorizer = pickle.load(open(vectorizer_path, "rb"))
 # ==============================
 @app.route("/")
 def home():
-    return "Spam Detection API is running 🚀"
+    return render_template("index.html")
 
 # ==============================
 # PREPROCESSING

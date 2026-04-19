@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Spam Detector</title>
+</head>
+<body>
+  <h2>Spam Detection App</h2>
+
+  <input id="msg" placeholder="Enter message" />
+  <button onclick="check()">Check</button>
+
+  <p id="result"></p>
+
+  <script>
+    async function check() {
+      const message = document.getElementById("msg").value;
+
+      const res = await fetch("/predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message })
+      });
+
+      const data = await res.json();
+
+      document.getElementById("result").innerText =
+        data.prediction + " (" + data.confidence + ")";
+    }
+  </script>
+</body>
+</html>
