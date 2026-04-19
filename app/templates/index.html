@@ -3,117 +3,148 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Spam Guard | Advanced Threat Detection</title>
+  <title>Spam Guard | Hacker Protocol</title>
   <link rel="stylesheet" href="css/style.css">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-  <div class="bg-shape shape1"></div>
-  <div class="bg-shape shape2"></div>
+  <div class="hacker-bg"></div>
+  <canvas id="matrix"></canvas>
+  <div class="scan-overlay"></div>
 
-  <div class="scanner-card">
-    <div class="header">
-      <div class="icon-container">
-        <i class="fa-solid fa-shield-halved pulse-icon"></i>
+  <div class="main-container">
+    <div class="hacker-card">
+      <div class="terminal-bar">
+        <div class="controls"><span></span><span></span><span></span></div>
+        <div class="status-indicator">SECURE_CONNECTION: ACTIVE</div>
       </div>
-      <h2>Spam Guard</h2>
-      <p>Real-time AI Threat Detection</p>
-    </div>
-
-    <div class="input-section">
-      <textarea id="msg" placeholder="Enter message, link, or phone number to scan..."></textarea>
-      <button id="scanBtn" onclick="check()">
-        <span id="btnText">Scan Now</span>
-        <i class="fa-solid fa-radar" id="btnIcon"></i>
-      </button>
-    </div>
-
-    <div id="result-box" class="hidden">
-      <div id="alert-header">
-        <i id="alert-icon" class="fa-solid"></i>
-        <h3 id="result-title"></h3>
-      </div>
-      <p id="result-desc"></p>
       
-      <div class="confidence-wrapper">
-        <span>AI Confidence</span>
-        <div class="progress-bar">
-          <div id="confidence-fill"></div>
+      <div class="card-body">
+        <div class="glitch-wrapper">
+          <h1 class="glitch" data-text="THREAT SCANNER">Spam detection model</h1>
         </div>
-        <span id="confidence-text">0%</span>
+        <p class="subtitle">Intercepting and analyzing malicious data packets...</p>
+
+        <div class="input-area">
+          <textarea id="msg" placeholder="Root@System: Enter data to analyze..."></textarea>
+          
+          <button id="scanBtn" onclick="check()">
+            <span id="btn-txt">INITIALIZE PROTOCOL</span>
+            <div id="loader" class="hidden"></div>
+          </button>
+        </div>
       </div>
     </div>
   </div>
 
-  <script>
-    async function check() {
-      const message = document.getElementById("msg").value;
-      const btn = document.getElementById("scanBtn");
-      const btnText = document.getElementById("btnText");
-      const resultBox = document.getElementById("result-box");
+  <div id="alertModal" class="modal-overlay hidden">
+    <div class="modal-window">
+      <div class="warning-border"></div>
+      <i id="modal-icon" class="fa-solid fa-user-secret"></i>
+      <h2 id="modal-status">SYSTEM BREACH</h2>
+      <p id="modal-msg">Potential phishing or spam signature detected in the input stream.</p>
       
-      if (!message.trim()) {
-        alert("Please enter a message to scan.");
-        return;
+      <div class="stat-container">
+        <div class="stat-box">
+          <label>THREAT_LEVEL</label>
+          <span id="threat-lvl">CRITICAL</span>
+        </div>
+        <div class="stat-box">
+          <label>ACCURACY</label>
+          <span id="modal-conf">0%</span>
+        </div>
+      </div>
+
+      <button onclick="closeModal()" class="dismiss-btn">PURGE DATA & CLOSE</button>
+    </div>
+  </div>
+
+  <script>
+    // --- Matrix Binary Rain Effect ---
+    const canvas = document.getElementById('matrix');
+    const ctx = canvas.getContext('2d');
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()*&^%";
+    const fontSize = 16;
+    const columns = canvas.width / fontSize;
+    const drops = Array(Math.floor(columns)).fill(1);
+
+    function drawMatrix() {
+      ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#bc13fe"; // Purple color for binary rain
+      ctx.font = fontSize + "px monospace";
+
+      for (let i = 0; i < drops.length; i++) {
+        const text = letters.charAt(Math.floor(Math.random() * letters.length));
+        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+        drops[i]++;
       }
+    }
+    setInterval(drawMatrix, 50);
 
-      btn.classList.add("loading");
-      btnText.innerText = "Scanning...";
-      resultBox.className = "hidden";
+    // --- Backend Integration ---
+    async function check() {
+      const msg = document.getElementById("msg").value;
+      if (!msg) return;
 
+      const btn = document.getElementById("scanBtn");
+      const btnTxt = document.getElementById("btn-txt");
+      const loader = document.getElementById("loader");
+
+      // UI state: Scanning
+      btn.classList.add("btn-processing");
+      btnTxt.innerText = "SCANNING...";
+      loader.classList.remove("hidden");
+      
       try {
-        // NOTE: This points to your backend. It will fail if your backend isn't running.
         const res = await fetch("/predict", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message })
+          body: JSON.stringify({ message: msg })
         });
-        
         const data = await res.json();
-        
-        let confidencePct = Math.round(parseFloat(data.confidence) * 100); 
-        if (isNaN(confidencePct)) confidencePct = 99; 
-
-        displayResult(data.prediction.toLowerCase(), confidencePct);
-
-      } catch (error) {
-        console.error("Error connecting to backend:", error);
-        alert("System error. Could not reach the detection server.");
+        showModal(data.prediction.toLowerCase(), data.confidence);
+      } catch (e) {
+        console.error("Connection failed");
       } finally {
-        btn.classList.remove("loading");
-        btnText.innerText = "Scan Now";
+        btn.classList.remove("btn-processing");
+        btnTxt.innerText = "INITIALIZE PROTOCOL";
+        loader.classList.add("hidden");
       }
     }
 
-    function displayResult(prediction, confidence) {
-      const resultBox = document.getElementById("result-box");
-      const alertIcon = document.getElementById("alert-icon");
-      const resultTitle = document.getElementById("result-title");
-      const resultDesc = document.getElementById("result-desc");
-      const confidenceFill = document.getElementById("confidence-fill");
-      const confidenceText = document.getElementById("confidence-text");
+    function showModal(prediction, confidence) {
+      const modal = document.getElementById("alertModal");
+      const win = document.querySelector(".modal-window");
+      const status = document.getElementById("modal-status");
+      const confText = document.getElementById("modal-conf");
+      const threatLvl = document.getElementById("threat-lvl");
+      const icon = document.getElementById("modal-icon");
 
-      resultBox.className = "result-container show";
-      alertIcon.className = "fa-solid"; 
+      let isSpam = prediction.includes("spam") || prediction.includes("fraud");
+      modal.classList.remove("hidden");
+      confText.innerText = (confidence * 100).toFixed(1) + "%";
 
-      if (prediction.includes("spam") || prediction.includes("fraud")) {
-        resultBox.classList.add("alert-danger");
-        alertIcon.classList.add("fa-triangle-exclamation");
-        resultTitle.innerText = "Threat Detected!";
-        resultDesc.innerText = "High probability of spam or fraud. Do not interact.";
-        confidenceFill.style.backgroundColor = "#ff3333";
+      if (isSpam) {
+        win.className = "modal-window threat-detected";
+        status.innerText = "THREAT IDENTIFIED";
+        threatLvl.innerText = "CRITICAL";
+        icon.className = "fa-solid fa-skull-crossbones";
       } else {
-        resultBox.classList.add("alert-safe");
-        alertIcon.classList.add("fa-circle-check");
-        resultTitle.innerText = "Looks Safe";
-        resultDesc.innerText = "No known threats detected in this content.";
-        confidenceFill.style.backgroundColor = "#00cc66";
+        win.className = "modal-window safe-verified";
+        status.innerText = "DATA VERIFIED";
+        threatLvl.innerText = "NEGLIGIBLE";
+        icon.className = "fa-solid fa-shield-halved";
       }
+    }
 
-      setTimeout(() => {
-        confidenceFill.style.width = `${confidence}%`;
-        confidenceText.innerText = `${confidence}%`;
-      }, 100);
+    function closeModal() {
+      document.getElementById("alertModal").classList.add("hidden");
     }
   </script>
 </body>
