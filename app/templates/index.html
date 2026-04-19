@@ -21,16 +21,15 @@
       
       <div class="card-body">
         <div class="glitch-wrapper">
-          <h1 class="glitch" data-text="THREAT SCANNER">Spam detection model</h1>
+          <h1 class="glitch" data-text="THREAT SCANNER">AI SPAM GUARD</h1>
         </div>
-        <p class="subtitle">Intercepting and analyzing malicious data packets...</p>
+        <p class="subtitle">Deep-packet analysis for malicious signatures...</p>
 
         <div class="input-area">
           <textarea id="msg" placeholder="Root@System: Enter data to analyze..."></textarea>
           
           <button id="scanBtn" onclick="check()">
             <span id="btn-txt">INITIALIZE PROTOCOL</span>
-            <div id="loader" class="hidden"></div>
           </button>
         </div>
       </div>
@@ -40,14 +39,14 @@
   <div id="alertModal" class="modal-overlay hidden">
     <div class="modal-window">
       <div class="warning-border"></div>
-      <i id="modal-icon" class="fa-solid fa-user-secret"></i>
-      <h2 id="modal-status">SYSTEM BREACH</h2>
-      <p id="modal-msg">Potential phishing or spam signature detected in the input stream.</p>
+      <i id="modal-icon" class="fa-solid"></i>
+      <h2 id="modal-status">ANALYZING...</h2>
+      <p id="modal-msg"></p>
       
       <div class="stat-container">
         <div class="stat-box">
           <label>THREAT_LEVEL</label>
-          <span id="threat-lvl">CRITICAL</span>
+          <span id="threat-lvl">--</span>
         </div>
         <div class="stat-box">
           <label>ACCURACY</label>
@@ -55,21 +54,18 @@
         </div>
       </div>
 
-      <button onclick="closeModal()" class="dismiss-btn">PURGE DATA & CLOSE</button>
+      <button onclick="closeModal()" class="dismiss-btn">CLOSE TERMINAL</button>
     </div>
   </div>
 
   <script>
-    // --- Matrix Binary Rain Effect ---
+    // --- Matrix Binary Rain ---
     const canvas = document.getElementById('matrix');
     const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
-    window.addEventListener("resize", () => {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-});
-
-    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()*&^%";
+    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     const fontSize = 16;
     const columns = canvas.width / fontSize;
     const drops = Array(Math.floor(columns)).fill(1);
@@ -77,9 +73,8 @@
     function drawMatrix() {
       ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "#bc13fe"; // Purple color for binary rain
+      ctx.fillStyle = "#bc13fe"; 
       ctx.font = fontSize + "px monospace";
-
       for (let i = 0; i < drops.length; i++) {
         const text = letters.charAt(Math.floor(Math.random() * letters.length));
         ctx.fillText(text, i * fontSize, drops[i] * fontSize);
@@ -89,19 +84,13 @@
     }
     setInterval(drawMatrix, 50);
 
-    // --- Backend Integration ---
+    // --- Core Logic Fix ---
     async function check() {
       const msg = document.getElementById("msg").value;
-      if (!msg) return;
+      if (!msg.trim()) return;
 
-      const btn = document.getElementById("scanBtn");
       const btnTxt = document.getElementById("btn-txt");
-      const loader = document.getElementById("loader");
-
-      // UI state: Scanning
-      btn.classList.add("btn-processing");
-      btnTxt.innerText = "SCANNING...";
-      loader.classList.remove("hidden");
+      btnTxt.innerText = "EXECUTING...";
       
       try {
         const res = await fetch("/predict", {
@@ -110,13 +99,13 @@
           body: JSON.stringify({ message: msg })
         });
         const data = await res.json();
+        
+        // Passing result to the modal
         showModal(data.prediction.toLowerCase(), data.confidence);
       } catch (e) {
-        console.error("Connection failed");
+        console.error("Communication Error");
       } finally {
-        btn.classList.remove("btn-processing");
         btnTxt.innerText = "INITIALIZE PROTOCOL";
-        loader.classList.add("hidden");
       }
     }
 
@@ -124,24 +113,32 @@
       const modal = document.getElementById("alertModal");
       const win = document.querySelector(".modal-window");
       const status = document.getElementById("modal-status");
+      const msgDesc = document.getElementById("modal-msg");
       const confText = document.getElementById("modal-conf");
       const threatLvl = document.getElementById("threat-lvl");
       const icon = document.getElementById("modal-icon");
 
-      let isSpam = prediction.includes("spam") || prediction.includes("fraud");
+      // FIX: Ensure "hi" or normal text triggers the SAFE state
+      // This checks if the prediction contains words like "spam" or "phishing"
+      const isSpam = prediction.includes("spam") || prediction.includes("phishing") || prediction.includes("fraud");
+      
       modal.classList.remove("hidden");
       confText.innerText = (confidence * 100).toFixed(1) + "%";
 
       if (isSpam) {
+        // DANGER ALERT (Red)
         win.className = "modal-window threat-detected";
-        status.innerText = "THREAT IDENTIFIED";
+        status.innerText = "SYSTEM BREACH";
+        msgDesc.innerText = "Malicious signature detected. High probability of phishing.";
         threatLvl.innerText = "CRITICAL";
-        icon.className = "fa-solid fa-skull-crossbones";
+        icon.className = "fa-solid fa-radiation";
       } else {
+        // SAFE ALERT (Green)
         win.className = "modal-window safe-verified";
-        status.innerText = "DATA VERIFIED";
+        status.innerText = "PACKET SECURE";
+        msgDesc.innerText = "No malicious patterns found. Data is verified as safe.";
         threatLvl.innerText = "NEGLIGIBLE";
-        icon.className = "fa-solid fa-shield-halved";
+        icon.className = "fa-solid fa-shield-check";
       }
     }
 
