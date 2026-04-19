@@ -1,31 +1,119 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Spam Detector</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spam Guard | Advanced Threat Detection</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-  <h2>Spam Detection App</h2>
+  <div class="bg-shape shape1"></div>
+  <div class="bg-shape shape2"></div>
 
-  <input id="msg" placeholder="Enter message" />
-  <button onclick="check()">Check</button>
+  <div class="scanner-card">
+    <div class="header">
+      <div class="icon-container">
+        <i class="fa-solid fa-shield-halved pulse-icon"></i>
+      </div>
+      <h2>Spam Guard</h2>
+      <p>Real-time AI Threat Detection</p>
+    </div>
 
-  <p id="result"></p>
+    <div class="input-section">
+      <textarea id="msg" placeholder="Enter message, link, or phone number to scan..."></textarea>
+      <button id="scanBtn" onclick="check()">
+        <span id="btnText">Scan Now</span>
+        <i class="fa-solid fa-radar" id="btnIcon"></i>
+      </button>
+    </div>
+
+    <div id="result-box" class="hidden">
+      <div id="alert-header">
+        <i id="alert-icon" class="fa-solid"></i>
+        <h3 id="result-title"></h3>
+      </div>
+      <p id="result-desc"></p>
+      
+      <div class="confidence-wrapper">
+        <span>AI Confidence</span>
+        <div class="progress-bar">
+          <div id="confidence-fill"></div>
+        </div>
+        <span id="confidence-text">0%</span>
+      </div>
+    </div>
+  </div>
 
   <script>
     async function check() {
       const message = document.getElementById("msg").value;
+      const btn = document.getElementById("scanBtn");
+      const btnText = document.getElementById("btnText");
+      const resultBox = document.getElementById("result-box");
+      
+      if (!message.trim()) {
+        alert("Please enter a message to scan.");
+        return;
+      }
 
-      const res = await fetch("/predict", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message })
-      });
+      btn.classList.add("loading");
+      btnText.innerText = "Scanning...";
+      resultBox.className = "hidden";
 
-      const data = await res.json();
+      try {
+        // NOTE: This points to your backend. It will fail if your backend isn't running.
+        const res = await fetch("/predict", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message })
+        });
+        
+        const data = await res.json();
+        
+        let confidencePct = Math.round(parseFloat(data.confidence) * 100); 
+        if (isNaN(confidencePct)) confidencePct = 99; 
 
-      document.getElementById("result").innerText =
-        data.prediction + " (" + data.confidence + ")";
+        displayResult(data.prediction.toLowerCase(), confidencePct);
+
+      } catch (error) {
+        console.error("Error connecting to backend:", error);
+        alert("System error. Could not reach the detection server.");
+      } finally {
+        btn.classList.remove("loading");
+        btnText.innerText = "Scan Now";
+      }
+    }
+
+    function displayResult(prediction, confidence) {
+      const resultBox = document.getElementById("result-box");
+      const alertIcon = document.getElementById("alert-icon");
+      const resultTitle = document.getElementById("result-title");
+      const resultDesc = document.getElementById("result-desc");
+      const confidenceFill = document.getElementById("confidence-fill");
+      const confidenceText = document.getElementById("confidence-text");
+
+      resultBox.className = "result-container show";
+      alertIcon.className = "fa-solid"; 
+
+      if (prediction.includes("spam") || prediction.includes("fraud")) {
+        resultBox.classList.add("alert-danger");
+        alertIcon.classList.add("fa-triangle-exclamation");
+        resultTitle.innerText = "Threat Detected!";
+        resultDesc.innerText = "High probability of spam or fraud. Do not interact.";
+        confidenceFill.style.backgroundColor = "#ff3333";
+      } else {
+        resultBox.classList.add("alert-safe");
+        alertIcon.classList.add("fa-circle-check");
+        resultTitle.innerText = "Looks Safe";
+        resultDesc.innerText = "No known threats detected in this content.";
+        confidenceFill.style.backgroundColor = "#00cc66";
+      }
+
+      setTimeout(() => {
+        confidenceFill.style.width = `${confidence}%`;
+        confidenceText.innerText = `${confidence}%`;
+      }, 100);
     }
   </script>
 </body>
