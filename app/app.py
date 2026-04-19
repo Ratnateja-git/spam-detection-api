@@ -9,14 +9,28 @@ import nltk
 from nltk.corpus import stopwords
 from scipy.sparse import hstack
 
-# Download stopwords (important for deployment)
-nltk.download('stopwords')
-
 app = Flask(__name__)
 
 # ==============================
-# Load model (correct path)
+# FIX NLTK (safe for deployment)
 # ==============================
+nltk_data_path = os.path.join(os.getcwd(), "nltk_data")
+nltk.data.path.append(nltk_data_path)
+
+try:
+    stop_words = set(stopwords.words('english'))
+except LookupError:
+    nltk.download('stopwords')
+    stop_words = set(stopwords.words('english'))
+
+# ==============================
+# LOAD MODEL (FIXED FOR YOUR STRUCTURE)
+# ==============================
+# Your structure:
+# SPAM_DETECTION_PROJECT/
+#   ├── app/app.py
+#   ├── model/*.pkl
+
 base_dir = os.path.dirname(os.path.dirname(__file__))
 
 model_path = os.path.join(base_dir, "model", "spam_model.pkl")
@@ -25,10 +39,15 @@ vectorizer_path = os.path.join(base_dir, "model", "vectorizer.pkl")
 model = pickle.load(open(model_path, "rb"))
 vectorizer = pickle.load(open(vectorizer_path, "rb"))
 
-stop_words = set(stopwords.words('english'))
+# ==============================
+# HOME ROUTE (fixes Not Found)
+# ==============================
+@app.route("/")
+def home():
+    return "Spam Detection API is running 🚀"
 
 # ==============================
-# Preprocessing
+# PREPROCESSING
 # ==============================
 def preprocess(text):
     text = text.lower()
@@ -38,7 +57,7 @@ def preprocess(text):
     return ' '.join(words)
 
 # ==============================
-# Feature Engineering
+# FEATURE ENGINEERING
 # ==============================
 def extract_features(text):
     return [
@@ -49,11 +68,11 @@ def extract_features(text):
     ]
 
 # ==============================
-# Prediction API
+# PREDICTION API
 # ==============================
 @app.route("/predict", methods=["POST"])
 def predict():
-    data = request.json
+    data = request.get_json() or {}
     text = data.get("message", "")
 
     processed = preprocess(text)
@@ -76,7 +95,7 @@ def predict():
     })
 
 # ==============================
-# Run Server
+# RUN LOCAL ONLY
 # ==============================
 if __name__ == "__main__":
     app.run(debug=True)
