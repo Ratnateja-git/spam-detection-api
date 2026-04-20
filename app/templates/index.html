@@ -3,148 +3,167 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Spam Guard | Hacker Protocol</title>
+  <title>Spam Guard | AI Threat Scanner</title>
+
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
+
 <body>
-  <div class="hacker-bg"></div>
-  <canvas id="matrix"></canvas>
-  <div class="scan-overlay"></div>
 
-  <div class="main-container">
-    <div class="hacker-card">
-      <div class="terminal-bar">
-        <div class="controls"><span></span><span></span><span></span></div>
-        <div class="status-indicator">SECURE_CONNECTION: ACTIVE</div>
-      </div>
-      
-      <div class="card-body">
-        <div class="glitch-wrapper">
-          <h1 class="glitch" data-text="THREAT SCANNER">AI SPAM GUARD</h1>
-        </div>
-        <p class="subtitle">Deep-packet analysis for malicious signatures...</p>
+<div class="hacker-bg"></div>
+<canvas id="matrix"></canvas>
 
-        <div class="input-area">
-          <textarea id="msg" placeholder="Root@System: Enter data to analyze..."></textarea>
-          
-          <button id="scanBtn" onclick="check()">
-            <span id="btn-txt">INITIALIZE PROTOCOL</span>
-          </button>
-        </div>
-      </div>
+<div class="main-container">
+  <div class="hacker-card">
+
+    <div class="terminal-bar">
+      <div class="controls"><span></span><span></span><span></span></div>
+      <div class="status-indicator">SECURE_CONNECTION: ACTIVE</div>
+    </div>
+
+    <div class="card-body">
+
+      <h1 class="glitch">AI SPAM GUARD</h1>
+      <p class="subtitle">Real-time threat detection engine...</p>
+
+      <textarea id="msg" placeholder="Enter message..."></textarea>
+
+      <button onclick="check()" id="scanBtn">
+        <span id="btn-txt">SCAN MESSAGE</span>
+      </button>
+
     </div>
   </div>
+</div>
 
-  <div id="alertModal" class="modal-overlay hidden">
-    <div class="modal-window">
-      <div class="warning-border"></div>
-      <i id="modal-icon" class="fa-solid"></i>
-      <h2 id="modal-status">ANALYZING...</h2>
-      <p id="modal-msg"></p>
-      
-      <div class="stat-container">
-        <div class="stat-box">
-          <label>THREAT_LEVEL</label>
-          <span id="threat-lvl">--</span>
-        </div>
-        <div class="stat-box">
-          <label>ACCURACY</label>
-          <span id="modal-conf">0%</span>
-        </div>
+<!-- MODAL -->
+<div id="alertModal" class="modal-overlay hidden">
+  <div class="modal-window">
+    <i id="modal-icon" class="fa-solid"></i>
+
+    <h2 id="modal-status">SCANNING...</h2>
+    <p id="modal-msg"></p>
+
+    <div class="stat-container">
+      <div class="stat-box">
+        <label>THREAT LEVEL</label>
+        <span id="threat-lvl">--</span>
       </div>
 
-      <button onclick="closeModal()" class="dismiss-btn">CLOSE TERMINAL</button>
+      <div class="stat-box">
+        <label>CONFIDENCE</label>
+        <span id="modal-conf">--</span>
+      </div>
     </div>
+
+    <button onclick="closeModal()" class="dismiss-btn">CLOSE</button>
   </div>
+</div>
 
-  <script>
-    // --- Matrix Binary Rain ---
-    const canvas = document.getElementById('matrix');
-    const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+<script>
+const samples = [
+  "Win ₹5000 now click link",
+  "Hi, are we meeting today?",
+  "Your account is blocked, click now",
+  "Let's catch up later"
+];
 
-    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    const fontSize = 16;
-    const columns = canvas.width / fontSize;
-    const drops = Array(Math.floor(columns)).fill(1);
+let i = 0;
+setInterval(() => {
+  document.getElementById("msg").placeholder = samples[i];
+  i = (i + 1) % samples.length;
+}, 3000);
 
-    function drawMatrix() {
-      ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "#bc13fe"; 
-      ctx.font = fontSize + "px monospace";
-      for (let i = 0; i < drops.length; i++) {
-        const text = letters.charAt(Math.floor(Math.random() * letters.length));
-        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
-        drops[i]++;
-      }
-    }
-    setInterval(drawMatrix, 50);
+// ENTER key support
+document.getElementById("msg").addEventListener("keypress", function(e) {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    check();
+  }
+});
 
-    // --- Core Logic Fix ---
-    async function check() {
-      const msg = document.getElementById("msg").value;
-      if (!msg.trim()) return;
+async function check() {
+  const msg = document.getElementById("msg").value.trim();
+  if (!msg) return alert("Enter a message");
 
-      const btnTxt = document.getElementById("btn-txt");
-      btnTxt.innerText = "EXECUTING...";
-      
-      try {
-        const res = await fetch("/predict", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: msg })
-        });
-        const data = await res.json();
-        
-        // Passing result to the modal
-        showModal(data.prediction.toLowerCase(), data.confidence);
-      } catch (e) {
-        console.error("Communication Error");
-      } finally {
-        btnTxt.innerText = "INITIALIZE PROTOCOL";
-      }
-    }
+  showModal("loading");
 
-    function showModal(prediction, confidence) {
-      const modal = document.getElementById("alertModal");
-      const win = document.querySelector(".modal-window");
-      const status = document.getElementById("modal-status");
-      const msgDesc = document.getElementById("modal-msg");
-      const confText = document.getElementById("modal-conf");
-      const threatLvl = document.getElementById("threat-lvl");
-      const icon = document.getElementById("modal-icon");
+  try {
+    const res = await fetch("/predict", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({message: msg})
+    });
 
-      // FIX: Ensure "hi" or normal text triggers the SAFE state
-      // This checks if the prediction contains words like "spam" or "phishing"
-      const isSpam = prediction.includes("spam") || prediction.includes("phishing") || prediction.includes("fraud");
-      
-      modal.classList.remove("hidden");
-      confText.innerText = (confidence * 100).toFixed(1) + "%";
+    const data = await res.json();
+    showModal(data.prediction, data.confidence);
 
-      if (isSpam) {
-        // DANGER ALERT (Red)
-        win.className = "modal-window threat-detected";
-        status.innerText = "SYSTEM BREACH";
-        msgDesc.innerText = "Malicious signature detected. High probability of phishing.";
-        threatLvl.innerText = "CRITICAL";
-        icon.className = "fa-solid fa-radiation";
-      } else {
-        // SAFE ALERT (Green)
-        win.className = "modal-window safe-verified";
-        status.innerText = "PACKET SECURE";
-        msgDesc.innerText = "No malicious patterns found. Data is verified as safe.";
-        threatLvl.innerText = "NEGLIGIBLE";
-        icon.className = "fa-solid fa-shield-check";
-      }
-    }
+  } catch {
+    showModal("error");
+  }
+}
 
-    function closeModal() {
-      document.getElementById("alertModal").classList.add("hidden");
-    }
-  </script>
+function showModal(prediction, confidence=null) {
+  const modal = document.getElementById("alertModal");
+  const win = document.querySelector(".modal-window");
+
+  const status = document.getElementById("modal-status");
+  const msgDesc = document.getElementById("modal-msg");
+  const confText = document.getElementById("modal-conf");
+  const threatLvl = document.getElementById("threat-lvl");
+  const icon = document.getElementById("modal-icon");
+
+  modal.classList.remove("hidden");
+
+  // LOADING
+  if (prediction === "loading") {
+    win.className = "modal-window";
+    status.innerText = "SCANNING...";
+    msgDesc.innerText = "Analyzing message...";
+    confText.innerText = "--";
+    threatLvl.innerText = "...";
+    return;
+  }
+
+  // ERROR
+  if (prediction === "error") {
+    win.className = "modal-window";
+    status.innerText = "SYSTEM ERROR";
+    msgDesc.innerText = "Connection failed. Try again.";
+    confText.innerText = "--";
+    threatLvl.innerText = "UNKNOWN";
+    return;
+  }
+
+  // Confidence safe handling
+  if (confidence && !isNaN(confidence)) {
+    confText.innerText = (confidence * 100).toFixed(1) + "%";
+  } else {
+    confText.innerText = "N/A";
+  }
+
+  const isSpam = prediction === "spam";
+
+  if (isSpam) {
+    win.className = "modal-window threat";
+    status.innerText = "THREAT DETECTED";
+    msgDesc.innerText = "Spam or phishing content identified.";
+    threatLvl.innerText = "HIGH";
+    icon.className = "fa-solid fa-triangle-exclamation";
+  } else {
+    win.className = "modal-window safe";
+    status.innerText = "SAFE MESSAGE";
+    msgDesc.innerText = "No spam detected.";
+    threatLvl.innerText = "LOW";
+    icon.className = "fa-solid fa-shield";
+  }
+}
+
+function closeModal() {
+  document.getElementById("alertModal").classList.add("hidden");
+}
+</script>
+
 </body>
 </html>

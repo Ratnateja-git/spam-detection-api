@@ -1,94 +1,117 @@
 :root {
-  --neon-purple: #bc13fe;
-  --bg-black: #050505;
-  --danger-red: #ff003c;
-  --safe-green: #00ff9d;
+  --bg: #050505;
+  --primary: #bc13fe;
+  --danger: #ff003c;
+  --safe: #00ff9d;
 }
 
 body {
-  margin: 0; background: var(--bg-black); height: 100vh;
-  display: flex; justify-content: center; align-items: center;
-  font-family: 'Consolas', monospace; overflow: hidden; color: white;
+  margin: 0;
+  background: var(--bg);
+  font-family: monospace;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
 }
 
-/* Hacker Background */
-.hacker-bg {
-  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-  background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), 
-              url('https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&q=80&w=2070');
-  background-size: cover; z-index: -3;
-}
-
-#matrix { position: absolute; top: 0; left: 0; z-index: -2; opacity: 0.2; }
-
-/* Main UI */
+/* CARD */
 .hacker-card {
-  width: 480px; background: rgba(10, 10, 15, 0.95);
-  border: 1px solid var(--neon-purple); border-radius: 4px;
+  width: 420px;
+  background: #0a0a0f;
+  border: 1px solid var(--primary);
 }
 
 .terminal-bar {
-  background: #111; padding: 10px; display: flex; 
-  border-bottom: 1px solid var(--neon-purple);
+  padding: 10px;
+  background: #111;
+  display: flex;
 }
 
-.controls span { display: inline-block; width: 8px; height: 8px; background: #333; border-radius: 50%; margin-right: 5px; }
-.status-indicator { margin-left: auto; font-size: 10px; color: var(--neon-purple); }
-.card-body { padding: 40px; text-align: center; }
+.status-indicator {
+  margin-left: auto;
+  color: var(--primary);
+  font-size: 10px;
+}
 
-.glitch { font-size: 26px; color: var(--neon-purple); letter-spacing: 4px; font-weight: bold; }
+.card-body {
+  padding: 30px;
+  text-align: center;
+}
 
+.glitch {
+  color: var(--primary);
+  letter-spacing: 2px;
+}
+
+/* INPUT */
 textarea {
-  width: 100%; height: 110px; background: black; border: 1px solid #222;
-  color: var(--neon-purple); padding: 15px; margin: 20px 0; outline: none;
+  width: 100%;
+  height: 100px;
+  background: black;
+  border: 1px solid #222;
+  color: var(--primary);
+  padding: 10px;
+  margin: 15px 0;
 }
 
+/* BUTTON */
 button {
-  width: 100%; padding: 15px; background: transparent; 
-  border: 1px solid var(--neon-purple); color: var(--neon-purple);
-  cursor: pointer; font-weight: bold; transition: 0.3s;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--primary);
+  background: transparent;
+  color: var(--primary);
+  cursor: pointer;
 }
 
-button:hover { background: var(--neon-purple); color: black; box-shadow: 0 0 20px var(--neon-purple); }
+button:hover {
+  background: var(--primary);
+  color: black;
+}
 
-/* --- MODAL POPUP --- */
+/* MODAL */
 .modal-overlay {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0,0,0,0.95); display: flex; justify-content: center; align-items: center; z-index: 1000;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .modal-window {
-  width: 420px; padding: 40px; text-align: center; border: 2px solid white; background: #080808;
+  background: #080808;
+  padding: 30px;
+  text-align: center;
+  width: 350px;
 }
 
-/* THREAT STATE (Spam) */
-.threat-detected {
-  border-color: var(--danger-red);
-  box-shadow: 0 0 60px rgba(255, 0, 60, 0.4);
-  animation: flash-red 0.8s infinite alternate;
+/* STATES */
+.threat {
+  border: 2px solid var(--danger);
+  color: var(--danger);
 }
 
-@keyframes flash-red {
-  from { border-color: #400; } to { border-color: var(--danger-red); }
+.safe {
+  border: 2px solid var(--safe);
+  color: var(--safe);
 }
 
-.threat-detected i { color: var(--danger-red); font-size: 55px; margin-bottom: 20px; }
-.threat-detected h2 { color: var(--danger-red); }
-
-/* SAFE STATE (Normal messages like "hi") */
-.safe-verified {
-  border-color: var(--safe-green);
-  box-shadow: 0 0 40px rgba(0, 255, 157, 0.2);
+.stat-container {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
 }
 
-.safe-verified i { color: var(--safe-green); font-size: 55px; margin-bottom: 20px; }
-.safe-verified h2 { color: var(--safe-green); }
+.stat-box span {
+  font-size: 18px;
+}
 
-.stat-container { display: flex; justify-content: space-between; margin-top: 30px; border-top: 1px solid #222; padding-top: 20px; }
-.stat-box label { display: block; font-size: 10px; color: #555; margin-bottom: 5px; }
-.stat-box span { font-weight: bold; font-size: 20px; }
-
-.dismiss-btn { border-color: #333; color: #666; margin-top: 20px; font-size: 11px; }
-.dismiss-btn:hover { background: white; color: black; }
-
-.hidden { display: none; }
+.hidden {
+  display: none;
+}
